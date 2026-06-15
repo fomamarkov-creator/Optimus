@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C++/CUDA Build artifacts
+*.o
+*.obj
+*.exe
+*.out
+*.lib
+*.a
+*.so
+*.dll
+*.exp
+build/
+dist/
+
+# Python Virtual Environments
+venv/
+.env
+
+# AI Models & Weights (Heavy files)
+*.safetensors
+*.bin
+*.pth
+*.onnx
+*.npy
+
+# System files
+.DS_Store
+Thumbs.db
