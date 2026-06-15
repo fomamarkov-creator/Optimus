@@ -36,4 +36,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: VCORE_v144_Engine_Linux
-          path: build/vcore_engine
+          # Исправленный путь: добавлен префикс lib и расширение .so
+          path: build/libvcore_engine.so
