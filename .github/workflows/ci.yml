@@ -3,7 +3,8 @@ on: [push]
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    # МЕНЯЕМ НА 22.04 для стабильности путей NVIDIA
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -12,12 +13,8 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
           cuda: '12.1.0'
-          method: 'network'
-
-      - name: Install Build Essentials
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake
+          # Используем локальный метод, он надежнее в CI
+          method: 'local'
 
       - name: Configure CMake
         run: |
