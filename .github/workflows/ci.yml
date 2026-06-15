@@ -4,6 +4,10 @@ on: [push]
 jobs:
   build-linux:
     runs-on: ubuntu-22.04
+    # Добавляем права на запись, чтобы билд мог создавать релизы
+    permissions:
+      contents: write
+      
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -32,9 +36,13 @@ jobs:
         run: |
           cmake --build build --config Release -j $(nproc)
 
-      - name: Upload Linux Artifact
-        uses: actions/upload-artifact@v4
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
         with:
-          name: VCORE_v144_Engine_Linux
-          # Исправленный путь: добавлен префикс lib и расширение .so
-          path: build/libvcore_engine.so
+          tag_name: v144-build-${{ github.run_number }}
+          name: VCORE Engine Build v144 (Run ${{ github.run_number }})
+          files: build/libvcore_engine.so
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
