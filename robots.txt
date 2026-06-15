@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /build/
+Disallow: /dist/
+Disallow: /private/
+Disallow: /matrix_cache/
+
+# Запрет для ИИ-сборщиков данных
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
