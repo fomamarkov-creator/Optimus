@@ -25,10 +25,11 @@ Here is the scaling efficiency of the VCore operator quantization across differe
 | **128 × 128** | **25.77x** faster | Stable (Harmonic 144) |
 | **256 × 256** | **50.90x** faster | Stable (Harmonic 144) |
 | **512 × 512** | **102.48x** faster | Stable (Harmonic 144) |
-| **1024 × 1024** | **451.62x (Peak)** faster | Stable (Harmonic 144) |
+| **1024 × 1024** | **538.92x (Peak)** faster | Stable (Harmonic 144) |
 | **2048 × 2048** | **128.68x** faster | Stable (Harmonic 144) |
 
-*Note: The hardware execution demonstrates a massive throughput increase, peaking at a 451.62x speedup for 1024x1024 matrices on Tensor Cores.*
+*Note: The hardware execution demonstrates a massive throughput increase, peaking at a 538.92x speedup for 1024x1024 matrices on Tensor Cores.*
+
 
 ## Repository Structure
 * `vcore_kernel.cu` — Raw low-level CUDA optimization kernel.
