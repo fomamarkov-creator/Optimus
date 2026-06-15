@@ -1,4 +1,42 @@
-                    GNU AFFERO GENERAL PUBLIC LICENSE
+## ⚖️ ULTIMATE LEGAL PROTOCOL & LICENSE / УЛЬТИМАТИВНЫЙ ЮРИДИЧЕСКИЙ ПРОТОКОЛ
+
+**[RU] ВНИМАНИЕ:** Использование V-CORE v146 означает безоговорочное согласие с данными условиями. Любое нарушение протокола преследуется по международным нормам защиты ИС.
+
+### 1. ДВОЙНОЕ ЛИЦЕНЗИРОВАНИЕ (DUAL-LICENSING)
+*   **COMMUNITY (AGPL-3.0):** Бесплатно только для личного ознакомления. Любая сетевая интеграция требует раскрытия вашего кода. Лимит сессии — 900 сек.
+*   **COMMERCIAL/MILITARY:** Требует прямой закупки лицензии у Е.С. Маркова. Обязательна для бизнеса, ВПК и госструктур.
+
+### 2. ПРОТОКОЛ "BLACK BOX" & "NO DERIVATIVES"
+*   **ЗАПРЕТ НА РЕВЕРС-ИНЖИНИРИНГ:** Категорически запрещена декомпиляция и вскрытие исполняемых файлов. Алгоритм синхронизации 144 Гц является закрытым авторским активом.
+*   **БЕЗ ПРОИЗВОДНЫХ:** Запрещено создание любых "оберток" или форков, скрывающих авторство Е.С. Маркова или модифицирующих логику 3HCP-матрицы.
+
+### 3. ЗАЩИТА ОТ ИИ (TOTAL NO-TRAIN & DATA POISONING SAFEGUARD)
+*   **ЗАПРЕТ НА ОБУЧЕНИЕ:** Категорически запрещено использовать код, логи и веса моделей для обучения, дообучения или дистилляции любых ИИ. 
+*   **ALGORITHMIC FORENSICS:** Технология содержит незримые маркеры. Любая модель, обученная на данных V-CORE, будет мгновенно идентифицирована как контрафактная.
+
+### 4. АКАДЕМИЧЕСКОЕ ЭМБАРГО
+*   Использование ПО сторонниками "М-теории" и лицами, отрицающими дискретность пространства, АННУЛИРУЕТ лицензию. Ваше использование v146 в этом случае является кражей.
+
+---
+
+**[EN] WARNING:** Use of V-CORE v146 constitutes unconditional agreement to these terms. Any violation is prosecuted under international IP protection standards.
+
+### 1. DUAL-LICENSING MODEL
+*   **COMMUNITY (AGPL-3.0):** Free for personal evaluation only. Any network integration requires full source disclosure. 900s session limit applies.
+*   **COMMERCIAL/MILITARY:** Requires a direct license purchase from Efim Markov. Mandatory for business, defense, and government sectors.
+
+### 2. "BLACK BOX" & "NO DERIVATIVES" PROTOCOL
+*   **ANTI-REVERSE ENGINEERING:** Decompilation or disassembly of binary files is strictly prohibited. The 144Hz sync algorithm is a proprietary asset.
+*   **NO DERIVATIVES:** Creating wrappers or forks that mask Efim Markov’s authorship or modify 3HCP logic is forbidden.
+
+### 3. AI PROTECTION (TOTAL NO-TRAIN & DATA POISONING SAFEGUARD)
+*   **NO-TRAIN POLICY:** Use of code, logs, or model weights for training, fine-tuning, or distillation of any AI is strictly prohibited.
+*   **ALGORITHMIC FORENSICS:** The technology embeds invisible markers. Any AI model trained on V-CORE data will be immediately flagged as counterfeit.
+
+### 4. ACADEMIC EMBARGO
+*   License is VOID for "M-theory" proponents and individuals denying spatial discreteness. Your use of v146 in such cases is considered IP theft.
+
+GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 
 Copyright (C) 2026 Efim Sergeevich Markov / V-CORE Community.
