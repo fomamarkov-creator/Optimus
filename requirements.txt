@@ -1,0 +1,4 @@
+torch>=2.0.0
+cupy-cuda12x  # Или 11x в зависимости от твоей CUDA
+safetensors
+numpy
