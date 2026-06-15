@@ -17,24 +17,27 @@ jobs:
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Configure and Build
+      - name: Configure CMake
         shell: pwsh
         run: |
-          # 1. Находим путь к CUDA
-          $cudaPath = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1"
-          $env:PATH = "$cudaPath\bin;$env:PATH"
+          # 1. Жестко прописываем пути к CUDA в переменные среды процесса
+          $env:CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1"
+          $env:CUDA_PATH_V12_1 = $env:CUDA_PATH
+          $env:PATH = "$env:CUDA_PATH\bin;$env:PATH"
           
-          # 2. Конфигурируем через NMake (он стабильнее в CI)
-          cmake -S . -B build -G "NMake Makefiles" `
-            -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_CUDA_COMPILER="$cudaPath\bin\nvcc.exe" `
+          # 2. Запуск конфигурации с явным указанием путей
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" `
             -DCMAKE_CUDA_ARCHITECTURES="all"
 
-          # 3. Собираем
+      - name: Build VCORE Engine
+        shell: pwsh
+        run: |
+          # Сборка через сам CMake (он сам найдет нужный билд-инструмент)
           cmake --build build --config Release
-
+          
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: VCORE_v144_Engine_Win64
-          path: build/vcore_engine.exe
+          path: build/Release/vcore_engine.exe
