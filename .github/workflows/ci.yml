@@ -5,13 +5,14 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install CUDA
-        # Используем экшен для установки CUDA в облаке GitHub
-        uses: jimmy-park/cuda-toolkit@v0.2.0
+        # Используем обновленный экшен, который точно доступен
+        uses: Jimver/cuda-toolkit@v0.2.16
         with:
           cuda: '12.1.0'
+          method: 'network'
 
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
@@ -20,7 +21,8 @@ jobs:
         run: cmake --build build --config Release
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        # Обновили до v4, чтобы убрать ошибку депрекации
+        uses: actions/upload-artifact@v4
         with:
           name: VCORE_v144_Engine_Win64
           path: build/Release/vcore_engine.exe
