@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteCond %{HTTP_USER_AGENT} (GPTBot|ChatGPT-User|Google-Extended|AnthropicAI|ClaudeBot|CCBot|Meta-ExternalAgent|Applebot-Extended|PerplexityBot|Bytespider) [NC]
+RewriteRule ^.*$ - [F,L]
