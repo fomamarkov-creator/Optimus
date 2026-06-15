@@ -1,11 +1,26 @@
-name: V-CORE-CI
+name: V-CORE Build Engine
 on: [push]
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build-windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Check Syntax
-        run: |
-          python3 -m py_compile *.py
-          echo "Синтаксис стабилен."
+
+      - name: Install CUDA
+        # Используем экшен для установки CUDA в облаке GitHub
+        uses: jimmy-park/cuda-toolkit@v0.2.0
+        with:
+          cuda: '12.1.0'
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Build VCORE Engine
+        run: cmake --build build --config Release
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: VCORE_v144_Engine_Win64
+          path: build/Release/vcore_engine.exe
