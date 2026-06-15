@@ -1,43 +1,21 @@
-name: V-CORE Build Engine
-on: [push]
-
-jobs:
-  build-windows:
-    runs-on: windows-latest
+  build-linux:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install CUDA
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
           cuda: '12.1.0'
-          method: 'network'
 
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Configure CMake
-        shell: pwsh
+      - name: Configure and Build
         run: |
-          # 1. Жестко прописываем пути к CUDA в переменные среды процесса
-          $env:CUDA_PATH = "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1"
-          $env:CUDA_PATH_V12_1 = $env:CUDA_PATH
-          $env:PATH = "$env:CUDA_PATH\bin;$env:PATH"
-          
-          # 2. Запуск конфигурации с явным указанием путей
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
-            -DCMAKE_CUDA_COMPILER="$env:CUDA_PATH\bin\nvcc.exe" `
-            -DCMAKE_CUDA_ARCHITECTURES="all"
+          mkdir build && cd build
+          cmake .. -DCMAKE_CUDA_ARCHITECTURES="all"
+          make -j$(nproc)
 
-      - name: Build VCORE Engine
-        shell: pwsh
-        run: |
-          # Сборка через сам CMake (он сам найдет нужный билд-инструмент)
-          cmake --build build --config Release
-          
-      - name: Upload Artifact
+      - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VCORE_v144_Engine_Win64
-          path: build/Release/vcore_engine.exe
+          name: VCORE_v144_Engine_Linux
+          path: build/vcore_engine
