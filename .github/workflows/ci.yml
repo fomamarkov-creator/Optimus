@@ -3,18 +3,28 @@ on: [push]
 
 jobs:
   build-linux:
-    # МЕНЯЕМ НА 22.04 для стабильности путей NVIDIA
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Free Disk Space (Resonance Prep)
+        run: |
+          # Удаление тяжеловесных предустановленных пакетов для освобождения места
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo apt-get clean
+          echo "Свободное место после очистки:"
+          df -h /
+
       - name: Install CUDA Toolkit
         uses: Jimver/cuda-toolkit@v0.2.16
         with:
           cuda: '12.1.0'
-          # Используем локальный метод, он надежнее в CI
           method: 'local'
+          # Ставим только ядро компиляции, чтобы не забить диск снова
+          sub-packages: '["nvcc", "cudart-dev"]'
 
       - name: Configure CMake
         run: |
