@@ -1,3 +1,7 @@
+## Scientific Educational Research & Reference Implementation
+This repository contains the official reference implementation of the mathematical framework published on Zenodo (DOI: 10.5281/zenodo.20542916). 
+This code is distributed strictly for academic, educational, and verification purposes under the GNU AGPLv3 license. It contains no proprietary corporate code, no malware, and violates no active terms of service.
+
 # Non-Commutative Lattice Cryptographic AI Engine (VCore)
 
 An ultra-high-performance cryptographic AI defense framework designed to protect neural networks against adversarial perturbations using non-commutative quantized lattices and continuous linear selection. 
