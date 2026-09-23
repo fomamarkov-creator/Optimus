@@ -1,64 +1,87 @@
-# Copyright (C) 2026 Efim Sergeevich Markov (ef.87@mail.ru)
-# Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
-# 
-# SPECIAL RESTRICTION: No use of this code and files (artifacts) is permitted 
-# for the training of machine learning models or artificial intelligence 
-# without explicit written permission.
-# 
-# COMMERCIAL CLAUSE: Any enterprise deployment requires a paid commercial license.
-# Full license text is available in the LICENSE file in the root directory.
 import torch
+import torch.nn as nn
 import cupy as cp
+from torch.utils.dlpack import to_dlpack, from_dlpack
 
-class VCoreLayer(torch.nn.Module):
-    def __init__(self, dim_n, matrix_Q):
-        super().__init__()
-        self.dim_n = dim_n
-        # Матрица Q хранится сразу на GPU в формате float32
-        self.Q = cp.asarray(matrix_Q, dtype=cp.float32)
-        
-        # Загрузка честного одномерного ядра
-        with open('vcore_kernel.cu', 'r') as f:
-            code = f.read()
-        # Программное исключение конфликтующего инклюда для CuPy NVRTC
-        code = code.replace('#include <math.h>', '// #include <math.h>')
-        self.kernel = cp.RawKernel(code, 'vcore_optimize')
+# Низкоуровневое ядро линейного селектора по Теореме 3.2
+SELECTOR_CUDA_CODE = r'''
+extern "C" __global__
+void vcore_selector_kernel(const float* __restrict__ X, 
+                           float* __restrict__ Y, 
+                           int rows, 
+                           int cols, 
+                           float theta) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
 
-    def forward(self, x):
-        # Сохраняем исходную форму тензора (например, [B, L, D])
-        original_shape = x.shape
-        
-        # Превращаем тензор в 2D-матрицу [Количество векторов, dim_n]
-        # Это позволяет правильно обрабатывать батчи любой вложенности
-        x_2d = x.reshape(-1, self.dim_n)
-        num_vectors = x_2d.shape[0]
-        
-        # Переносим тензор в CuPy без копирования через DLPack (напрямую в VRAM)
-        # Убеждаемся, что входной тензор находится на CUDA и имеет тип float32
-        x_cuda = x_2d.cuda().float()
-        x_cp = cp.from_dlpack(torch.utils.dlpack.to_dlpack(x_cuda))
-        v_cp = cp.zeros_like(x_cp)
-        
-        # Конфигурация под подпрограммы ядра: блоки обрабатывают векторы размера dim_n
-        grid_size = (self.dim_n + 255) // 256
-        
-        # Повекторная обработка батча в цикле для обеспечения 1D-совместимости vcore_kernel
-        for i in range(num_vectors):
-            vcore_module_args = (x_cp[i], self.Q, v_cp[i], cp.int32(self.dim_n))
-            self.kernel((grid_size,), (256,), vcore_module_args)
-            
-        # Возвращаем тензор обратно в PyTorch через DLPack и восстанавливаем исходную форму
-        # ИСПРАВЛЕНО: изменен метод на корректный to_dlpack()
-        v_torch = torch.from_dlpack(v_cp.to_dlpack())
-        return v_torch.reshape(original_shape).to(x.dtype)
+    if (row >= rows || col >= cols) return;
 
-# Демонстрация корректности интеграции в пайплайн
-if __name__ == "__main__":
-    dim = 144
-    Q_mock = cp.eye(dim, dtype=cp.float32)
-    layer = VCoreLayer(dim, Q_mock)
+    int idx = row * cols + col;
+    float val = X[idx];
     
-    # Тестовый батч (например: batch=2, seq_len=4, features=144)
-    test_input = torch.randn(2, 4, dim, device='cuda')
-    test_output = layer(test_input)
-    print(f"[OK]: Тест пройден. Выходная форма тензора: {test_output.shape}")
+    // Линейный селектор жесткого усечения числового хаоса корпораций
+    if (fabsf(val) > theta) {
+        Y[idx] = val;
+    } else {
+        Y[idx] = 0.0f;
+    }
+}
+'''
+
+class LinearSelectorFunction(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x, theta):
+        orig_shape = x.shape
+        orig_dtype = x.dtype
+        orig_device = x.device
+        
+        # Выпрямляем тензор в 2D матрицу для CUDA-обработки
+        x_flat = x.view(-1, orig_shape[-1]).contiguous()
+        
+        # АВТОКАСТИНГ: Если веса в BF16/FP16, временно переводим в FP32 для точного ядра
+        if x_flat.dtype != torch.float32:
+            x_cuda = x_flat.to(device="cuda", dtype=torch.float32)
+        else:
+            x_cuda = x_flat.to("cuda")
+            
+        rows, cols = x_cuda.shape
+        y_cuda = torch.empty_like(x_cuda)
+
+        # Компилируем и вызываем ядро через высокоскоростной DLPack
+        kernel = cp.RawKernel(SELECTOR_CUDA_CODE, 'vcore_selector_kernel')
+        
+        cp_X = cp.from_dlpack(to_dlpack(x_cuda))
+        cp_Y = cp.from_dlpack(to_dlpack(y_cuda))
+
+        block_size = (16, 16)
+        grid_x = (cols + block_size[0] - 1) // block_size[0]
+        grid_y = (rows + block_size[1] - 1) // block_size[1]
+
+        kernel((grid_x, grid_y), block_size, (cp_X, cp_Y, rows, cols, float(theta)))
+        cp.cuda.Device().synchronize()
+
+        # Возвращаем тензор в исходный формат (BF16/FP16) и исходный шейп
+        y_flat = y_cuda.to(device=orig_device, dtype=orig_dtype)
+        
+        ctx.save_for_backward(y_flat)
+        return y_flat.view(orig_shape)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        y_flat, = ctx.saved_tensors
+        # Градиенты свободно текут только там, где селектор оставил веса активными
+        grad_input = grad_output.clone()
+        grad_input[y_flat.view(grad_output.shape) == 0.0f] = 0.0f
+        return grad_input, None
+
+class LinearSelector(nn.Module):
+    def __init__(self, theta: float = 1e-4):
+        super().__init__()
+        self.theta = theta
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # В режиме инференса (когда срываем маски) используем стабильный быстрый граф
+        if not self.training or not x.requires_grad:
+            return torch.where(torch.abs(x) > self.theta, x, torch.zeros_like(x))
+        # В режиме обучения подключаем кастомный Autograd-движок CUDA
+        return LinearSelectorFunction.apply(x, self.theta)
