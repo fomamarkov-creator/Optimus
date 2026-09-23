@@ -9,7 +9,7 @@ with open('vcore_kernel.cu', 'r') as f:
     code = f.read().replace('#include <math.h>', '// #include <math.h>')
 vcore_module = cp.RawKernel(code, 'vcore_optimize')
 
-def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param):
+def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param, alpha):
     X_cpu = tensor.detach().float().numpy()
     
     if len(X_cpu.shape) == 2:
@@ -31,11 +31,13 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param):
                     X_row_gpu = cp.asarray(chunk)
                     V_row_gpu = cp.zeros(limit_dim, dtype=cp.float32)
                     
-                    # ИСПРАВЛЕНО: Передаем float32(zeta_param) пятым аргументом в ядро
                     vcore_module((grid_size,), (256,), (X_row_gpu, Q_gpu, V_row_gpu, cp.int32(limit_dim), cp.float32(zeta_param)))
                     
                     V_out[r, c_start:c_end] = V_row_gpu.get()[:current_len]
-            return torch.from_numpy(V_out).to(tensor.dtype)
+            
+            # МЯГКОЕ ПОДМЕШИВАНИЕ: Интеграция 2.4% резонанса V-CORE
+            V_blended = (1.0 - alpha) * X_cpu + alpha * V_out
+            return torch.from_numpy(V_blended).to(tensor.dtype)
         
         else:
             Q_gpu = cp.asarray(Q_matrix[:cols, :cols]).astype(cp.float32)
@@ -43,13 +45,15 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param):
             for r in range(rows):
                 X_row_gpu = cp.asarray(X_cpu[r]).astype(cp.float32)
                 V_row_gpu = cp.zeros(cols, dtype=cp.float32)
-                # ИСПРАВЛЕНО: Добавлен zeta_param
                 vcore_module((grid_size,), (256,), (X_row_gpu, Q_gpu, V_row_gpu, cp.int32(cols), cp.float32(zeta_param)))
                 V_out[r] = V_row_gpu.get()
-            return torch.from_numpy(V_out).to(tensor.dtype)
+            
+            # МЯГКОЕ ПОДМЕШИВАНИЕ: Интеграция 2.4% резонанса V-CORE
+            V_blended = (1.0 - alpha) * X_cpu + alpha * V_out
+            return torch.from_numpy(V_blended).to(tensor.dtype)
         
     elif len(X_cpu.shape) == 1:
-        n = X_cpu.shape[0]
+        n = X_cpu.shape
         if n > limit_dim:
             return tensor
             
@@ -58,9 +62,11 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param):
         V_gpu = cp.zeros(n, dtype=cp.float32)
         
         grid_size = (n + 255) // 256
-        # ИСПРАВЛЕНО: Добавлен zeta_param
         vcore_module((grid_size,), (256,), (X_gpu, Q_gpu, V_gpu, cp.int32(n), cp.float32(zeta_param)))
-        return torch.from_numpy(V_gpu.get()).to(tensor.dtype)
+        
+        # МЯГКОЕ ПОДМЕШИВАНИЕ для bias
+        V_blended = (1.0 - alpha) * X_cpu + alpha * V_gpu.get()
+        return torch.from_numpy(V_blended).to(tensor.dtype)
         
     return tensor
 
@@ -86,23 +92,23 @@ def main():
     print(f"[INIT]: Синтез марковской матрицы Q размера {target_dim}x{target_dim}...")
     Q_np = matrix_generator.generate_markov_q(target_dim)
 
-    # ПАРАМЕТРЫ РЕЗОНАНСА V-CORE
-    ZETA_VALUE = 1.001  # Безопасный коэффициент для глубоких LLM-структур
+    # КОНФИГУРАЦИЯ ДЕЛИКАТНОГО РЕЗОНАНСА С УЧЕТОМ КОЭФФИЦИЕНТА МАРКОВА
+    ZETA_VALUE = 1.001
+    ALPHA = 0.024  # ИСПРАВЛЕНО: Ровно 2.4% подмешивания V-CORE
     
     new_weights = {}
     for k, v in weights.items():
-        # СТРАТЕГИЧЕСКАЯ ЗАЩИТА: Пропускаем нормализацию и выходную голову, чтобы не сломать логику ответов
         if any(substring in k.lower() for substring in ["norm", "ln", "lm_head"]):
             print(f"Пропуск слоя (сохранение структуры): {k}")
             new_weights[k] = v
         else:
             print(f"Обработка резонансом: {k} | Спектр формы: {list(v.shape)}")
-            new_weights[k] = apply_vcore_resonance(v, Q_np, target_dim, ZETA_VALUE)
+            new_weights[k] = apply_vcore_resonance(v, Q_np, target_dim, ZETA_VALUE, ALPHA)
 
     cp.cuda.Stream.null.synchronize()
     save_file(new_weights, "model_vcore_fixed.safetensors")
     print("\n=================================================================")
-    print("     КОРРЕКТНАЯ МОДИФИКАЦИЯ СЕТИ ПО МЕТОДУ МАРКОВА ЗАВЕРШЕНА     ")
+    print("     БЕЗОПАСНАЯ МОДИФИКАЦИЯ СЕТИ ПО МЕТОДУ МАРКОВА ЗАВЕРШЕНА     ")
     print("=================================================================")
 
 if __name__ == "__main__":
