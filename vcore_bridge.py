@@ -35,7 +35,6 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param, alpha):
                     
                     V_out[r, c_start:c_end] = V_row_gpu.get()[:current_len]
             
-            # МЯГКОЕ ПОДМЕШИВАНИЕ: Интеграция 2.4% резонанса V-CORE
             V_blended = (1.0 - alpha) * X_cpu + alpha * V_out
             return torch.from_numpy(V_blended).to(tensor.dtype)
         
@@ -48,12 +47,12 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param, alpha):
                 vcore_module((grid_size,), (256,), (X_row_gpu, Q_gpu, V_row_gpu, cp.int32(cols), cp.float32(zeta_param)))
                 V_out[r] = V_row_gpu.get()
             
-            # МЯГКОЕ ПОДМЕШИВАНИЕ: Интеграция 2.4% резонанса V-CORE
             V_blended = (1.0 - alpha) * X_cpu + alpha * V_out
             return torch.from_numpy(V_blended).to(tensor.dtype)
         
     elif len(X_cpu.shape) == 1:
-        n = X_cpu.shape
+        # ИСПРАВЛЕНО: берем размерность как число из кортежа shape[0]
+        n = X_cpu.shape[0]
         if n > limit_dim:
             return tensor
             
@@ -64,7 +63,6 @@ def apply_vcore_resonance(tensor, Q_matrix, limit_dim, zeta_param, alpha):
         grid_size = (n + 255) // 256
         vcore_module((grid_size,), (256,), (X_gpu, Q_gpu, V_gpu, cp.int32(n), cp.float32(zeta_param)))
         
-        # МЯГКОЕ ПОДМЕШИВАНИЕ для bias
         V_blended = (1.0 - alpha) * X_cpu + alpha * V_gpu.get()
         return torch.from_numpy(V_blended).to(tensor.dtype)
         
@@ -92,9 +90,8 @@ def main():
     print(f"[INIT]: Синтез марковской матрицы Q размера {target_dim}x{target_dim}...")
     Q_np = matrix_generator.generate_markov_q(target_dim)
 
-    # КОНФИГУРАЦИЯ ДЕЛИКАТНОГО РЕЗОНАНСА С УЧЕТОМ КОЭФФИЦИЕНТА МАРКОВА
     ZETA_VALUE = 1.001
-    ALPHA = 0.024  # ИСПРАВЛЕНО: Ровно 2.4% подмешивания V-CORE
+    ALPHA = 0.024  
     
     new_weights = {}
     for k, v in weights.items():
