@@ -7,45 +7,47 @@
 # 
 # COMMERCIAL CLAUSE: Any enterprise deployment requires a paid commercial license.
 # Full license text is available in the LICENSE file in the root directory.
-import numpy as np
-import torch
+import cupy as cp
 
-def generate_markov_q(dim_n, dim_m, zeta=1.024):
+def generate_markov_q(dim_n, dim_m=None, zeta=1.024):
     """
-    Синтез матрицы Q для V-CORE v144.
-    dim_n: размерность весов (L1)
-    dim_m: размерность стабильного ядра V
+    Ускоренный GPU-синтез матрицы Q для V-CORE v146.
+    dim_n: общая размерность (размер столбцов слоя)
+    dim_m: размерность стабильного ядра (если None, берется dim_n // 2)
     """
-    print(f"--- СИНТЕЗ МАТРИЦЫ Q (ZETA: {zeta}) ---")
+    if dim_m is None or dim_m == dim_n:
+        dim_m = dim_n // 2  # Защита от обнуления матрицы (пропорция Маркова)
+        if dim_m == 0:
+            dim_m = 1
+
+    print(f"--- GPU-СИНТЕЗ МАТРИЦЫ Q ({dim_n}x{dim_n}) | ЯДРО V: {dim_m} | ZETA: {zeta} ---")
     
-    # 1. Создаем базис стабильного подпространства V
-    # Используем ортогональные гармоники (счет Русов)
-    basis = np.zeros((dim_n, dim_m))
+    # 1. Создаем базис стабильного подпространства V на GPU
+    basis = cp.zeros((dim_n, dim_m), dtype=cp.float32)
+    t = cp.linspace(0, 2 * cp.pi, dim_n, dtype=cp.float32)
+    
     for i in range(dim_m):
-        # Генерируем гармонику 144
-        t = np.linspace(0, 2 * np.pi, dim_n)
-        basis[:, i] = np.sin(t * (i + 1) * zeta)
+        # Генерируем гармонику 144 на GPU
+        basis[:, i] = cp.sin(t * (i + 1) * zeta)
     
-    # Ортонормируем базис (Gram-Schmidt)
-    q, _ = np.linalg.qr(basis)
+    # Ортонормируем базис через быстрое GPU QR-разложение
+    q, _ = cp.linalg.qr(basis)
     
-    # 2. Строим проектор Q = I - P, где P - проекция на нестабильный шум
-    # В правильной модели Маркова Q должна быть самосопряженной в смысле изометрии
+    # 2. Строим проектор Q = I - P
     P = q @ q.T
-    Q = np.eye(dim_n) - P
+    Q = cp.eye(dim_n, dtype=cp.float32) - P
     
     # 3. Резонансная доводка (Zeta-коррекция)
-    # Мы слегка смещаем собственные значения, чтобы создать "энергетическую яму"
     Q = Q * zeta
     
-    print(f"[OK]: Матрица {dim_n}x{dim_n} синтезирована. Резонанс стабилен.")
-    return Q.astype(np.float32)
+    print(f"[OK]: Матрица {dim_n}x{dim_n} успешно синтезирована на GPU.")
+    
+    # Возвращаем NumPy массив во float32 для совместимости с мостом
+    return cp.asnumpy(Q).astype(cp.float32)
 
 if __name__ == "__main__":
-    # Пример генерации для стандартного слоя
-    dim = 144 # Сакральное число Маркова
-    matrix_q = generate_markov_q(dim, dim // 2)
-    
-    # Сохраняем для использования в vcore_bridge.py
+    import numpy as np
+    dim = 144  # Сакральное число Маркова
+    matrix_q = generate_markov_q(dim)
     np.save("matrix_q_144.npy", matrix_q)
     print("--- ФАЙЛ matrix_q_144.npy ГОТОВ ---")
