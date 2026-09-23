@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2026 Efim Sergeevich Markov (ef.87@mail.ru)
+ * Licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
  */
 
 #include <cuda_runtime.h>
@@ -17,12 +18,12 @@ void vcore_optimize(const float* X, const float* Q, float* V, int n, float zeta)
             sum += Q[row * n + i] * X[i];
         }
         
-        // Фильтр Маркова
+        // Фильтр Маркова (устранение статики)
         if (fabsf(sum) < EPS) {
             sum = 0.0f;
         }
         
-        // ИСПРАВЛЕНО: Теперь zeta передается динамически, защищая от взрыва активаций
+        // Резонансное ввинчивание с динамическим коэффициентом
         V[row] = sum * zeta;
     }
 }
