@@ -47,7 +47,7 @@
 Создайте ячейку, вставьте и запустите следующий код для установки зависимостей и клонирования репозитория:
 ```python
 !pip install -q cupy-cuda12x safetensors transformers accelerate
-!git clone https://github.com
+!git clone https://github.com/fomamarkov-creator/Optimus
 !cp Optimus/vcore_bridge.py .
 !cp Optimus/LinearSelector.py .
 print("✅ Компоненты Optimus успешно импортированы!")
