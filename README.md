@@ -1,22 +1,22 @@
-## Scientific Educational Research & Reference Implementation
-This repository contains the official reference implementation of the mathematical framework published on Zenodo (DOI: 10.5281/zenodo.20542916). 
-This code is distributed strictly for academic, educational, and verification purposes under the GNU AGPLv3 license. It contains no proprietary corporate code, no malware, and violates no active terms of service.
+## Научно-образовательное исследование и эталонная реализация
+Этот репозиторий содержит официальную эталонную реализацию математической базы, опубликованной на Zenodo (DOI: 10.5281/zenodo.20542916). 
+Данный код распространяется строго в академических, образовательных целях и для верификации под лицензией GNU AGPLv3. Он не содержит проприетарного корпоративного кода, вредоносных программ и не нарушает действующие условия предоставления услуг.
 
-# Non-Commutative Lattice Cryptographic AI Engine (Optimus / VCore)
+# Некоммутативный решетчатый криптографический движок ИИ (Optimus / VCore)
 
-An ultra-high-performance cryptographic AI defense framework designed to protect neural networks against adversarial perturbations using non-commutative quantized lattices and continuous linear selection. 
+Высокопроизводительный криптографический фреймворк защиты ИИ, разработанный для защиты нейросетей от состязательных возмущений с использованием некоммутативных квантованных решеток и непрерывной линейной селекции.
 
-The architecture is accelerated natively via CUDA kernels (`vcore_kernel.cu`) compiled on-the-fly via the CuPy NVRTC JIT compiler engine, and seamlessly integrated with PyTorch and CuPy via high-performance Zero-Copy DLPack memory sharing semantics.
+Архитектура аппаратно ускоряется на низком уровне с помощью CUDA-ядер (`vcore_kernel.cu`), компилируемых «на лету» через JIT-движок CuPy NVRTC, и бесшовно интегрируется с PyTorch и CuPy через высокопроизводительный протокол обмена памятью Zero-Copy DLPack напрямую во VRAM.
 
-📦 **PRE-BUILT RELEASE PACK:** A fully verified, integrated, and production-ready build containing all scripts and kernels is attached directly to the official repository release. You can download the pre-packaged archive from the **[Releases](../../releases)** section as `Optimus_v146_RELEASE.zip`.
+📦 **ГОТОВЫЙ ПАКЕТ РЕЛИЗА:** Полностью проверенная, интегрированная и готовая к работе сборка, содержащая все скрипты и ядра, прикреплена прямо к официальному релизу репозитория. Вы можете скачать готовый архив в разделе **[Releases](../../releases)** под именем `Optimus_v146_RELEASE.zip`.
 
-## Key Features
-* **Operator Quantization (Theorem 7.1):** Rigorously bounds numerical divergence under single-precision (`FP32`) hardware execution domains, ensuring deterministic trajectory preservation.
-* **Bare-Metal 1D CUDA Acceleration:** Ultra-fast parallelized row-wise processing equipped with inner loop unrolling (`#pragma unroll 4`) to achieve near-optimal execution bounds relative to legacy CPU operators.
-* **Memory Safety & OOM Boundaries:** Automated block-wise slicing architecture (`LIMIT_DIM = 4096`) ensuring complex LLM hidden states (such as token embedding projections) are safely evaluated within constrained consumer VRAM topologies.
-* **Residual Blend Topology:** Dynamic alpha-blending stabilization (\(\alpha = 0.024\)) enabling the direct injection of Markov resonance operators into deep transformer architectures (e.g., Qwen) without corrupting pre-trained semantic spaces or losing linguistic coherence.
+## Ключевые особенности
+* **Квантование операторов (Теорема 7.1):** Строго ограничивает численную дивергенцию в доменах аппаратного исполнения одинарной точности (`FP32`), обеспечивая сохранение детерминированной траектории весов.
+* **Bare-Metal 1D CUDA-ускорение:** Сверхбыстрая параллельная построчная обработка, оснащенная разверткой внутреннего цикла (`#pragma unroll 4`) для достижения теоретического предела скорости выполнения по сравнению с процессором.
+* **Безопасность памяти и границы OOM:** Автоматическая архитектура блочной нарезки (`LIMIT_DIM = 4096`), гарантирующая безопасную обработку огромных скрытых состояний LLM (таких как проекции эмбеддингов токенов) в рамках ограниченного объема гражданских видеокарт.
+* **Топология Residual Blend:** Динамическая стабилизация альфа-смешивания (α = 0.024), позволяющая напрямую внедрять марковские резонансные операторы в глубокие трансформерные архитектуры (например, Qwen) без разрушения предобученного семантического пространства и без потери связности речи.
 
-## Repository Layout & Directory Structure
+## Структура каталогов и расположение файлов
 📂 optimus-vcore-project/
 ├── vcore_kernel.cu       # CUDA-ядро (динамический компилятор NVRTC)
 ├── matrix_generator.py   # Ортогональный генератор Маркова на GPU
@@ -24,39 +24,39 @@ The architecture is accelerated natively via CUDA kernels (`vcore_kernel.cu`) co
 ├── LinearSelector.py     # Интеграционный слой DLPack для PyTorch
 └── requirements.txt      # Зависимости проекта
 
-## Deployment & Usage Instructions (Инструкция по развертыванию)
+## Инструкция по развертыванию и использованию (Deployment Instructions)
 
-The complex is fully autonomous and compiles CUDA kernels on-the-fly inside the GPU VRAM pool. It can be executed on a local workstation or directly within a free **Google Colab** environment equipped with a T4 GPU or higher.
+Комплекс полностью автономен и компилирует CUDA-ядра «на лету» прямо внутри пула видеопамяти (VRAM). Его можно запустить как на локальной рабочей станции, так и в бесплатной среде **Google Colab** с подключенным ускорителем T4 GPU или выше.
 
-### 1. Environment Initialization
-Install the software stack. Ensure your CuPy binary matches the active CUDA version on your system (e.g., `cupy-cuda12x` or `cupy-cuda11x`):
+### 1. Инициализация окружения
+Установите необходимый стек ПО. Убедитесь, что бинарный пакет CuPy соответствует активной версии CUDA в вашей системе (например, `cupy-cuda12x` или `cupy-cuda11x`):
 ```bash
 pip install torch>=2.0.0 cupy-cuda12x safetensors numpy scipy
 ```
 
-### 2. Verification & Performance Benchmark
-Before processing any live model, execute the integrated mathematical audit and hardware profiling suite to verify stability invariants and measure execution speedup scaling relative to CPU (SciPy):
+### 2. Верификация и бенчмарк производительности
+Перед обработкой реальной рабочей модели запустите встроенный пакет математического аудита и аппаратного профилирования, чтобы проверить инварианты стабильности ядра и измерить пиковое ускорение относительно CPU (SciPy):
 ```bash
 python run_all_tests.py
 ```
 
-### 3. Automated Weights Modification Pipeline
-Place your target model weights file (`model.safetensors`) in the root directory and execute the bridge pipeline:
+### 3. Автоматизированный конвейер модификации весов
+Положите целевой файл весов вашей модели (`model.safetensors`) в корневую директорию со скриптами и запустите мост перекодировки:
 ```bash
 python vcore_bridge.py
 ```
-The script will dynamically scan the layer topology, configure safe block-wise memory boundaries, strip static noise via the CUDA Markov filter, integrate 2.4% resonance, and save the optimized artifact to disk as `model_vcore_fixed.safetensors`.
+Скрипт автоматически просканирует топологию слоев, настроит безопасные границы памяти блоков, очистит статический шум с помощью CUDA-фильтра Маркова, применит мягкое подмешивание 2.4% резонанса и запишет оптимизированный артефакт на диск под именем `model_vcore_fixed.safetensors`.
 
 ---
 
-## 📜 Legal Notice & Licensing (Лицензия и Ограничения)
+## 📜 Юридическое уведомление и Лицензия (Licensing)
 
-This software is distributed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
+Это программное обеспечение распространяется под лицензией **GNU Affero General Public License v3.0 (AGPLv3)**.
 
-⚠️ **SPECIAL RESTRICTION ( ML/AI Model Training):**
-No use of this code, algorithms, logic, or generated model artifacts (files/weights) is permitted for the training, tuning, alignment, or refinement of machine learning models or artificial intelligence software systems without explicit, prior, written permission from the author.
+⚠️ **СПЕЦИАЛЬНОЕ ОГРАНИЧЕНИЕ (Обучение моделей ML/AI):**
+Запрещается любое использование данного кода, алгоритмов, логики или сгенерированных артефактов моделей (файлов/весов) для обучения, тонкой настройки (fine-tuning), выравнивания (alignment) или улучшения моделей машинного обучения или программных систем искусственного интеллекта без явного предварительного письменного разрешения автора.
 
-💼 **COMMERCIAL CLAUSE:**
-Any commercial deployment, enterprise infrastructure integration, or corporate utilization of this framework requires a paid commercial license. Corporations attempting to bypass or extract these math sub-differentials without authorization will be subject to direct enforcement. 
+💼 **КОММЕРЧЕСКАЯ ОГОВОРКА:**
+Любое коммерческое развертывание, интеграция в корпоративную инфраструктуру или использование данного фреймворка в рамках бизнеса требует приобретения платной коммерческой лицензии. Корпорации, пытающиеся обойти лицензию или извлечь эти математические субдифференциалы без авторизации, будут преследоваться в судебном порядке.
 
-To request a commercial license or custom integrations, contact the author directly: **Efim Sergeevich Markov** (ef.87@mail.ru).
+Для запроса коммерческой лицензии или кастомной интеграции связывайтесь с автором напрямую: **Марков Ефим Сергеевич** (ef.87@mail.ru).
