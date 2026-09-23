@@ -28,15 +28,27 @@
 └── 📄 vcore_kernel.cu             # CUDA-ядро (динамический компилятор NVRTC)
 ```
 
-## Инструкция по развертыванию и использованию (Deployment Instructions)
+## Инструкция по развертыванию и ### 🚀 Быстрый запуск Optimus V-Core в Google Colab
 
-Комплекс полностью автономен и компилирует CUDA-ядра «на лету» прямо внутри пула видеопамяти (VRAM). Его можно запустить как на локальной рабочей станции, так и в бесплатной среде **Google Colab** с подключенным ускорителем T4 GPU или выше.
+Теперь вы можете запустить резонансную очистку весов любой современной модели (включая Qwen 2.5 и Llama 3) прямо со своего смартфона.
 
-### 1. Инициализация окружения
-Установите необходимый стек ПО. Убедитесь, что бинарный пакет CuPy соответствует активной версии CUDA в вашей системе (например, `cupy-cuda12x` или `cupy-cuda11x`):
-```bash
-pip install torch>=2.0.0 cupy-cuda12x safetensors numpy scipy
+**Шаг 1. Подготовка окружения и загрузка Optimus:**
+```python
+!pip install -q cupy-cuda12x safetensors transformers accelerate
+!git clone https://github.com
+!cp Optimus/vcore_bridge.py .
 ```
+
+**Шаг 2. Скачивание оригинального файла весов (например, Qwen 2.5):**
+```python
+import torch; from transformers import AutoModelForCausalLM; model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B-Instruct", torch_dtype=torch.bfloat16, device_map="cpu"); model.save_pretrained("./original_model"); import shutil; shutil.copy("./original_model/model.safetensors", "./model.safetensors")
+```
+
+**Шаг 3. Запуск V-Core компиляции на золотом сечении α = 0.024:**
+```python
+import sys; sys.path.append('.'); import vcore_bridge; vcore_bridge.run_optimization("model.safetensors", "model_vcore_fixed.safetensors")
+```
+
 
 ### 2. Верификация и бенчмарк производительности
 Перед обработкой реальной рабочей модели запустите встроенный пакет математического аудита и аппаратного профилирования, чтобы проверить инварианты стабильности ядра и измерить пиковое ускорение относительно CPU (SciPy):
