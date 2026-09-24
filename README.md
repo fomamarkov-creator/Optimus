@@ -1,4 +1,4 @@
-#                OPTIMUS
+#                OPTIMUS (V-Core)
 <p align="center">
   <img src="images (7).jpeg" alt="Optimus V-CORE" width="800">
 </p>
