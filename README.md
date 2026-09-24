@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="image (7).png" alt="Optimus V-CORE" width="800">
+  <img src="images (7).jpeg" alt="Optimus V-CORE" width="800">
 </p>
 
 ## Научно-образовательное исследование и эталонная реализация
